@@ -46,7 +46,7 @@ class player_minmax_game:
             button = self.canvas.create_oval(x - 10, y - 10, x + 10, y + 10, fill="white")
             self.arrayButtons.append(button)
             #Pievienot pogas koordinātas atsevišķā masīvā turpmākām aprēķinām.
-            virtualButton =(x,y)
+            virtualButton = (x - 10,y - 10)
             self.arrayVirtualButtons.append(virtualButton)
 
 
@@ -80,6 +80,10 @@ class player_minmax_game:
         for line in self.arrayLines:
             self.canvas.delete(line)
         self.arrayLines.clear()
+
+        self.arrayVirtualLines.clear()
+        self.arrayVirtualButtons.clear()
+
         for button in self.arrayButtons:
             self.canvas.itemconfig(button, fill="white")
         self.player_sods = 0
@@ -123,10 +127,7 @@ class player_minmax_game:
                     self.player_sods = self.player_sods + self.calculate_score()
                     self.update_score()
 
-#                    test = self.calculate_virtual_score(self.arrayVirtualLines)
-#                    print("score: ", test)
 
-                    self.update_score()
 
                     #pārbaude spēles beigas - tiek izmantotas visas pogas
                     if self.numberOfPoints - len(self.arrayLockedButtons) < 2:
@@ -148,9 +149,10 @@ class player_minmax_game:
             #aprēķinat labākās līnijas koordinātas
             line = self.find_best_line()
             #pogu objektu iegūšana pēc virtuālajām koordinātām
+
             selected_buttons = []
-            selected_buttons.append(self.canvas.find_closest(line[0], line[1])[0])
-            selected_buttons.append(self.canvas.find_closest(line[2], line[3])[0])       
+            selected_buttons.append(self.canvas.find_closest(line[0]+10, line[1]+10, 0, self.numberOfPoints - 1)[0])
+            selected_buttons.append(self.canvas.find_closest(line[2]+10, line[3]+10, 0, self.numberOfPoints - 1)[0])       
             
             for button in selected_buttons:
                 if len(self.arraySelectedButtons) < 2:
@@ -166,7 +168,8 @@ class player_minmax_game:
                     self.draw_line(button1, button2)
                     self.arraySelectedButtons.clear()
                     self.update_virtual_buttons()
-                    self.computer_sods = self.computer_sods + self.calculate_score()                   
+                    self.computer_sods = self.computer_sods + self.calculate_score() 
+                    self.update_score()                  
                     if self.numberOfPoints - len(self.arrayLockedButtons) < 2:
                         self.arraySelectedButtons.clear()
                         self.arrayLockedButtons.clear()
@@ -193,8 +196,8 @@ class player_minmax_game:
     def find_best_line(self):
 
         #pārbaudīt virtuālās pogas un līnijas
-        selected_buttons = random.sample(self.arrayVirtualButtons, 2)
-        bestLine = (selected_buttons[0][0], selected_buttons[0][1], selected_buttons[1][0], selected_buttons[1][1])
+        #selected_buttons = random.sample(self.arrayVirtualButtons, 2)
+        #bestLine = (selected_buttons[0][0], selected_buttons[0][1], selected_buttons[1][0], selected_buttons[1][1])
 
         #masīvs, kurā pievienosim ģenerētās līnijas, aprēķinot punktus katrai cilpas rindai un saglabājot un atjauninot pozīciju, ja rindā ir maksimālais punktu skaits
         tempLines = self.arrayVirtualLines.copy()
@@ -207,21 +210,20 @@ class player_minmax_game:
             #šī ir pēdējā poga masīvā
             lastBtn = tempArrayButtons[-1]
             for btn in tempArrayButtons[0:-1]:
-                line = (btn[0],btn[1],lastBtn[0],lastBtn[1])
+                line = (btn[0]+10,btn[1]+10,lastBtn[0]+10,lastBtn[1]+10)
                 #pievienojam līniju no pašreizējā cilpas punkta līdz pēdējam punktam
                 tempLines.append(line)
                 
                 #veicam šī virziena rekursīvu novērtējumu
-#                score = self.calculate_virtual_score(tempLines)
+                score = self.calculate_virtual_score(tempLines)
                 #noņemt pogas, kurām tiek novilkta pašreizējā līnija, no masīva, kuru mēs nosūtām uz mini_max
+                """"
                 recurseArrayButtons = tempArrayButtons.copy()
                 del recurseArrayButtons[-1]
                 recurseArrayButtons.remove(btn)
                 self.minimaxCounter = 0
                 score = self.mini_max(recurseArrayButtons, tempLines, 1)
-
-#                print("Line: ", line, "Score:", score)
-
+                """
                 #ir jāatlasa vismaz viena opcija un jāinicializē mainīgais (ja nav labu opciju, jāizvēlas vismazāk sliktā)
                 if (bestScore == -1):
                     bestScore = score
@@ -256,12 +258,10 @@ class player_minmax_game:
         if (self.minimaxCounter > 3):
             return 0
 
-#        print("-> MiniMax call: ", self.minimaxCounter)
         self.minimaxCounter = self.minimaxCounter + 1
 
         currentScore = self.calculate_virtual_score(arLines)
         if (len(arButtons) <= 1):
-#            print("<- MiniMax return1: ", self.minimaxCounter)
             self.minimaxCounter = self.minimaxCounter - 1
             return currentScore
         
@@ -271,7 +271,7 @@ class player_minmax_game:
             #šī ir pēdējā poga mūsu masīvā
             lastBtn = arButtons[-1]
             for btn in arButtons[0:-1]:
-                line = (btn[0],btn[1],lastBtn[0],lastBtn[1])
+                line = (btn[0]+10,btn[1]+10,lastBtn[0]+10,lastBtn[1]+10)
                 #pievienojiet līniju no pašreizējā cilpas punkta līdz pēdējam punktam
                 #TODO: проблема - мы добавляем ту же самую линию. необходимо при каждом новом вызове алгоритма сдвигать точку
                 arLines.append(line)
@@ -282,7 +282,6 @@ class player_minmax_game:
                 del recurseArrayButtons[-1]
                 recurseArrayButtons.remove(btn)
                 score = self.mini_max(recurseArrayButtons, arLines, player*-1)
-#                print("Line: ", line, "Score:", score)
 
                 #ir jāatlasa vismaz viena opcija un jāinicializē mainīgais (ja nav labu opciju, jāizvēlas vismazāk sliktā)
                 if (bestScore == -1):
@@ -299,9 +298,7 @@ class player_minmax_game:
             #izdzēšam pēdējo pogu, jo visas līnijas tika izveidotas tai
             del arButtons[-1]
 
-#        print("<- MiniMax return2: ", self.minimaxCounter)
         self.minimaxCounter = self.minimaxCounter - 1
-
         return currentScore+bestScore
     
     #funkcija līnijas zīmēšanai un pievienošanai masīvam
